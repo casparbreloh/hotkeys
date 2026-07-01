@@ -2,6 +2,7 @@ mod app;
 mod config;
 mod daemon;
 mod hotkey;
+mod installer;
 mod paths;
 
 use anyhow::{Result, anyhow};
@@ -30,6 +31,10 @@ enum Cmd {
     },
     /// List current bindings
     List,
+    /// Install and start the daemon
+    Enable,
+    /// Stop and uninstall the daemon
+    Disable,
     #[command(hide = true)]
     Daemon,
 }
@@ -40,6 +45,8 @@ impl Cli {
             Cmd::Bind { app, hotkey } => bind(app, hotkey),
             Cmd::Unbind { app } => unbind(app),
             Cmd::List => list(),
+            Cmd::Enable => installer::install(),
+            Cmd::Disable => installer::uninstall(),
             Cmd::Daemon => daemon::run(),
         }
     }

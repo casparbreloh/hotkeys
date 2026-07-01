@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+pub const LABEL: &str = "dev.casparbreloh.hotkeys";
+
 pub fn config_file() -> PathBuf {
     config_dir().join("bindings.toml")
 }
@@ -10,6 +12,14 @@ pub fn config_dir() -> PathBuf {
 
 pub fn log_file() -> PathBuf {
     state_dir().join("hotkeys.log")
+}
+
+pub fn launch_agent_dir() -> PathBuf {
+    home().join("Library/LaunchAgents")
+}
+
+pub fn launch_agent() -> PathBuf {
+    launch_agent_dir().join(format!("{LABEL}.plist"))
 }
 
 fn state_dir() -> PathBuf {

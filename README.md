@@ -6,6 +6,8 @@ Minimal macOS global hotkeys daemon.
 hotkeys bind com.apple.Safari cmd+shift+s
 hotkeys list
 hotkeys unbind com.apple.Safari
+hotkeys enable
+hotkeys disable
 hotkeys daemon
 ```
 
