@@ -41,6 +41,9 @@ pub fn parse(s: &str) -> Result<Shortcut> {
             bail!("unknown token `{token}` in `{s}`");
         }
     }
+    if modifiers == 0 {
+        bail!("global hotkey `{s}` must include at least one modifier");
+    }
     Ok(Shortcut {
         key_code: key_code.ok_or_else(|| anyhow!("no key in `{s}`"))?,
         modifiers,

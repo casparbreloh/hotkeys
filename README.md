@@ -8,7 +8,6 @@ hotkeys list
 hotkeys unbind com.apple.Safari
 hotkeys enable
 hotkeys disable
-hotkeys daemon
 ```
 
 Bindings are stored in `~/.config/hotkeys/bindings.toml`.

@@ -1,9 +1,10 @@
 use std::fs;
+use std::io::ErrorKind;
 use std::process::Command;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow, bail};
 
 use crate::paths;
 
@@ -79,7 +80,11 @@ pub fn install() -> Result<()> {
 
 pub fn uninstall() -> Result<()> {
     let _ = launchctl(&["bootout", &service_target()]);
-    let _ = fs::remove_file(paths::launch_agent());
+    match fs::remove_file(paths::launch_agent()) {
+        Ok(()) => {}
+        Err(e) if e.kind() == ErrorKind::NotFound => {}
+        Err(e) => return Err(e).context("removing LaunchAgent plist"),
+    }
     println!("✓ disabled");
     Ok(())
 }

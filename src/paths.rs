@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-pub const LABEL: &str = "dev.casparbreloh.hotkeys";
+pub const LABEL: &str = "hotkeys.daemon";
 
 pub fn config_file() -> PathBuf {
     config_dir().join("bindings.toml")
