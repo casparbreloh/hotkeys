@@ -9,10 +9,31 @@ pub const SHIFT: u32 = 1 << 9;
 pub const OPT: u32 = 1 << 11;
 pub const CTRL: u32 = 1 << 12;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Shortcut {
     pub key_code: u32,
     pub modifiers: u32,
+    key_name: &'static str,
+}
+
+impl std::fmt::Display for Shortcut {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut parts = Vec::new();
+        if self.modifiers & CMD != 0 {
+            parts.push("cmd");
+        }
+        if self.modifiers & SHIFT != 0 {
+            parts.push("shift");
+        }
+        if self.modifiers & OPT != 0 {
+            parts.push("opt");
+        }
+        if self.modifiers & CTRL != 0 {
+            parts.push("ctrl");
+        }
+        parts.push(self.key_name);
+        write!(f, "{}", parts.join("+"))
+    }
 }
 
 pub fn parse(s: &str) -> Result<Shortcut> {
@@ -25,6 +46,7 @@ pub fn parse(s: &str) -> Result<Shortcut> {
 
     let mut modifiers = 0u32;
     let mut key_code: Option<u32> = None;
+    let mut key_name: Option<&'static str> = None;
     for token in normalized
         .split('+')
         .map(str::trim)
@@ -32,11 +54,12 @@ pub fn parse(s: &str) -> Result<Shortcut> {
     {
         if let Some(m) = modifier(token) {
             modifiers |= m;
-        } else if let Some(k) = key_code_for(token) {
+        } else if let Some((k, name)) = key_code_for(token) {
             if key_code.is_some() {
                 bail!("multiple keys in `{s}`");
             }
             key_code = Some(k);
+            key_name = Some(name);
         } else {
             bail!("unknown token `{token}` in `{s}`");
         }
@@ -47,6 +70,7 @@ pub fn parse(s: &str) -> Result<Shortcut> {
     Ok(Shortcut {
         key_code: key_code.ok_or_else(|| anyhow!("no key in `{s}`"))?,
         modifiers,
+        key_name: key_name.ok_or_else(|| anyhow!("no key in `{s}`"))?,
     })
 }
 
@@ -60,79 +84,79 @@ fn modifier(t: &str) -> Option<u32> {
     })
 }
 
-fn key_code_for(t: &str) -> Option<u32> {
+fn key_code_for(t: &str) -> Option<(u32, &'static str)> {
     Some(match t {
-        "a" => 0x00,
-        "s" => 0x01,
-        "d" => 0x02,
-        "f" => 0x03,
-        "h" => 0x04,
-        "g" => 0x05,
-        "z" => 0x06,
-        "x" => 0x07,
-        "c" => 0x08,
-        "v" => 0x09,
-        "b" => 0x0B,
-        "q" => 0x0C,
-        "w" => 0x0D,
-        "e" => 0x0E,
-        "r" => 0x0F,
-        "y" => 0x10,
-        "t" => 0x11,
-        "1" => 0x12,
-        "2" => 0x13,
-        "3" => 0x14,
-        "4" => 0x15,
-        "6" => 0x16,
-        "5" => 0x17,
-        "=" => 0x18,
-        "9" => 0x19,
-        "7" => 0x1A,
-        "-" => 0x1B,
-        "8" => 0x1C,
-        "0" => 0x1D,
-        "]" => 0x1E,
-        "o" => 0x1F,
-        "u" => 0x20,
-        "[" => 0x21,
-        "i" => 0x22,
-        "p" => 0x23,
-        "return" | "enter" => 0x24,
-        "l" => 0x25,
-        "j" => 0x26,
-        "'" => 0x27,
-        "k" => 0x28,
-        ";" => 0x29,
-        "\\" => 0x2A,
-        "," => 0x2B,
-        "/" => 0x2C,
-        "n" => 0x2D,
-        "m" => 0x2E,
-        "." => 0x2F,
-        "tab" => 0x30,
-        "space" => 0x31,
-        "delete" | "backspace" => 0x33,
-        "escape" | "esc" => 0x35,
-        "f1" => 0x7A,
-        "f2" => 0x78,
-        "f3" => 0x63,
-        "f4" => 0x76,
-        "f5" => 0x60,
-        "f6" => 0x61,
-        "f7" => 0x62,
-        "f8" => 0x64,
-        "f9" => 0x65,
-        "f10" => 0x6D,
-        "f11" => 0x67,
-        "f12" => 0x6F,
-        "left" => 0x7B,
-        "right" => 0x7C,
-        "down" => 0x7D,
-        "up" => 0x7E,
-        "home" => 0x73,
-        "end" => 0x77,
-        "pageup" => 0x74,
-        "pagedown" => 0x79,
+        "a" => (0x00, "a"),
+        "s" => (0x01, "s"),
+        "d" => (0x02, "d"),
+        "f" => (0x03, "f"),
+        "h" => (0x04, "h"),
+        "g" => (0x05, "g"),
+        "z" => (0x06, "z"),
+        "x" => (0x07, "x"),
+        "c" => (0x08, "c"),
+        "v" => (0x09, "v"),
+        "b" => (0x0B, "b"),
+        "q" => (0x0C, "q"),
+        "w" => (0x0D, "w"),
+        "e" => (0x0E, "e"),
+        "r" => (0x0F, "r"),
+        "y" => (0x10, "y"),
+        "t" => (0x11, "t"),
+        "1" => (0x12, "1"),
+        "2" => (0x13, "2"),
+        "3" => (0x14, "3"),
+        "4" => (0x15, "4"),
+        "6" => (0x16, "6"),
+        "5" => (0x17, "5"),
+        "=" => (0x18, "="),
+        "9" => (0x19, "9"),
+        "7" => (0x1A, "7"),
+        "-" => (0x1B, "-"),
+        "8" => (0x1C, "8"),
+        "0" => (0x1D, "0"),
+        "]" => (0x1E, "]"),
+        "o" => (0x1F, "o"),
+        "u" => (0x20, "u"),
+        "[" => (0x21, "["),
+        "i" => (0x22, "i"),
+        "p" => (0x23, "p"),
+        "return" | "enter" => (0x24, "return"),
+        "l" => (0x25, "l"),
+        "j" => (0x26, "j"),
+        "'" => (0x27, "'"),
+        "k" => (0x28, "k"),
+        ";" => (0x29, ";"),
+        "\\" => (0x2A, "\\"),
+        "," => (0x2B, ","),
+        "/" => (0x2C, "/"),
+        "n" => (0x2D, "n"),
+        "m" => (0x2E, "m"),
+        "." => (0x2F, "."),
+        "tab" => (0x30, "tab"),
+        "space" => (0x31, "space"),
+        "delete" | "backspace" => (0x33, "delete"),
+        "escape" | "esc" => (0x35, "escape"),
+        "f1" => (0x7A, "f1"),
+        "f2" => (0x78, "f2"),
+        "f3" => (0x63, "f3"),
+        "f4" => (0x76, "f4"),
+        "f5" => (0x60, "f5"),
+        "f6" => (0x61, "f6"),
+        "f7" => (0x62, "f7"),
+        "f8" => (0x64, "f8"),
+        "f9" => (0x65, "f9"),
+        "f10" => (0x6D, "f10"),
+        "f11" => (0x67, "f11"),
+        "f12" => (0x6F, "f12"),
+        "left" => (0x7B, "left"),
+        "right" => (0x7C, "right"),
+        "down" => (0x7D, "down"),
+        "up" => (0x7E, "up"),
+        "home" => (0x73, "home"),
+        "end" => (0x77, "end"),
+        "pageup" => (0x74, "pageup"),
+        "pagedown" => (0x79, "pagedown"),
         _ => return None,
     })
 }
@@ -311,4 +335,15 @@ pub fn unregister_all() {
         }
     }
     reg.callbacks.clear();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse;
+
+    #[test]
+    fn canonicalizes_equivalent_shortcuts() {
+        assert_eq!(parse("shift+cmd+s").unwrap().to_string(), "cmd+shift+s");
+        assert_eq!(parse("⌘⇧s").unwrap(), parse("cmd+shift+s").unwrap());
+    }
 }

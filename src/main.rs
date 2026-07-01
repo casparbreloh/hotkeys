@@ -52,11 +52,14 @@ fn main() -> Result<()> {
 
 fn bind(app_input: String, hotkey: String) -> Result<()> {
     let bundle_id = app::resolve(&app_input)?;
-    hotkey::parse(&hotkey)?;
+    let shortcut = hotkey::parse(&hotkey)?;
+    let hotkey = shortcut.to_string();
     let mut bindings = config::load()?;
     let displaced: Vec<String> = bindings
         .iter()
-        .filter(|(k, v)| *v == &hotkey && **k != bundle_id)
+        .filter(|(k, v)| {
+            **k != bundle_id && hotkey::parse(v).is_ok_and(|existing| existing == shortcut)
+        })
         .map(|(k, _)| k.clone())
         .collect();
     for k in &displaced {

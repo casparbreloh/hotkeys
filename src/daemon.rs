@@ -71,22 +71,28 @@ fn rebind() {
             return;
         }
     };
-    hotkey::unregister_all();
-    eprintln!("reload ({} bindings)", bindings.len());
+    let mut parsed = Vec::with_capacity(bindings.len());
     for (bundle_id, hotkey_str) in bindings {
         match hotkey::parse(&hotkey_str) {
-            Ok(shortcut) => {
-                let bid = bundle_id.clone();
-                let log = hotkey_str.clone();
-                let r = hotkey::register(shortcut, move || {
-                    eprintln!("fired {log} → {bid}");
-                    app::activate(&bid);
-                });
-                if let Err(e) = r {
-                    eprintln!("skip {hotkey_str}: {e}");
-                }
+            Ok(shortcut) => parsed.push((bundle_id, hotkey_str, shortcut)),
+            Err(e) => {
+                eprintln!("config parse failed, keeping current bindings: {hotkey_str}: {e}");
+                return;
             }
-            Err(e) => eprintln!("skip {hotkey_str}: {e}"),
+        }
+    }
+
+    hotkey::unregister_all();
+    eprintln!("reload ({} bindings)", parsed.len());
+    for (bundle_id, hotkey_str, shortcut) in parsed {
+        let bid = bundle_id.clone();
+        let log = hotkey_str.clone();
+        let r = hotkey::register(shortcut, move || {
+            eprintln!("fired {log} → {bid}");
+            app::activate(&bid);
+        });
+        if let Err(e) = r {
+            eprintln!("skip {hotkey_str}: {e}");
         }
     }
 }

@@ -64,7 +64,7 @@ pub fn install() -> Result<()> {
     let plist_str = plist_path
         .to_str()
         .ok_or_else(|| anyhow!("non-utf8 plist path"))?;
-    let _ = launchctl(&["bootout", &service_target()]);
+    bootout_if_loaded()?;
 
     let (mut rc, mut err) = launchctl(&["bootstrap", &gui_domain(), plist_str]);
     if matches!(rc, LAUNCHCTL_EIO | LAUNCHCTL_EBUSY) {
@@ -74,18 +74,18 @@ pub fn install() -> Result<()> {
     if rc != 0 {
         bail!("launchctl bootstrap exited {rc}: {}", err.trim());
     }
-    println!("✓ enabled");
+    println!("✓ enabled {}", paths::LABEL);
     Ok(())
 }
 
 pub fn uninstall() -> Result<()> {
-    let _ = launchctl(&["bootout", &service_target()]);
+    bootout_if_loaded()?;
     match fs::remove_file(paths::launch_agent()) {
         Ok(()) => {}
         Err(e) if e.kind() == ErrorKind::NotFound => {}
         Err(e) => return Err(e).context("removing LaunchAgent plist"),
     }
-    println!("✓ disabled");
+    println!("✓ disabled {}", paths::LABEL);
     Ok(())
 }
 
@@ -104,6 +104,21 @@ fn launchctl(args: &[&str]) -> (i32, String) {
         ),
         Err(e) => (-1, e.to_string()),
     }
+}
+
+fn bootout_if_loaded() -> Result<()> {
+    let (rc, err) = launchctl(&["bootout", &service_target()]);
+    if rc == 0 || is_not_loaded(&err) {
+        return Ok(());
+    }
+    bail!("launchctl bootout exited {rc}: {}", err.trim());
+}
+
+fn is_not_loaded(err: &str) -> bool {
+    let err = err.to_ascii_lowercase();
+    err.contains("could not find service")
+        || err.contains("no such process")
+        || err.contains("service is not loaded")
 }
 
 fn gui_domain() -> String {
