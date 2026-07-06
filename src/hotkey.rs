@@ -262,6 +262,9 @@ unsafe extern "C" fn dispatch(_next: *mut c_void, event: EventRef, _user: *mut c
     if status != NO_ERR {
         return status;
     }
+    if id.signature != HK_SIGNATURE {
+        return NO_ERR;
+    }
     let cb = REGISTRY
         .lock()
         .unwrap()

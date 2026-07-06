@@ -5,7 +5,7 @@ use objc2_app_kit::{NSWorkspace, NSWorkspaceOpenConfiguration};
 use objc2_foundation::NSString;
 
 pub fn resolve(input: &str) -> Result<String> {
-    if input.contains('.') && !input.contains(' ') {
+    if is_bundle_id(input) && bundle_exists(input) {
         return Ok(input.to_string());
     }
     let script = format!("id of app \"{}\"", input.replace('"', "\\\""));
@@ -17,6 +17,18 @@ pub fn resolve(input: &str) -> Result<String> {
         bail!("app not found: `{input}`");
     }
     Ok(id)
+}
+
+fn is_bundle_id(input: &str) -> bool {
+    input.contains('.') && !input.contains(' ')
+}
+
+fn bundle_exists(bundle_id: &str) -> bool {
+    unsafe {
+        NSWorkspace::sharedWorkspace()
+            .URLForApplicationWithBundleIdentifier(&NSString::from_str(bundle_id))
+            .is_some()
+    }
 }
 
 pub fn activate(bundle_id: &str) {
