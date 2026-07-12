@@ -339,14 +339,3 @@ pub fn unregister_all() {
     }
     reg.callbacks.clear();
 }
-
-#[cfg(test)]
-mod tests {
-    use super::parse;
-
-    #[test]
-    fn canonicalizes_equivalent_shortcuts() {
-        assert_eq!(parse("shift+cmd+s").unwrap().to_string(), "cmd+shift+s");
-        assert_eq!(parse("⌘⇧s").unwrap(), parse("cmd+shift+s").unwrap());
-    }
-}

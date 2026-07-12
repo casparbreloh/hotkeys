@@ -6,11 +6,13 @@ mod launchd;
 mod paths;
 
 use anyhow::{Result, anyhow};
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(arg_required_else_help = true)]
 struct Cli {
+    #[arg(long, hide = true)]
+    usage_spec: bool,
     #[command(subcommand)]
     cmd: Cmd,
 }
@@ -40,6 +42,13 @@ enum Cmd {
 }
 
 fn main() -> Result<()> {
+    if std::env::args_os().len() == 2
+        && std::env::args_os().nth(1).as_deref() == Some("--usage-spec".as_ref())
+    {
+        print_usage_spec();
+        return Ok(());
+    }
+
     match Cli::parse().cmd {
         Cmd::Bind { app, hotkey } => bind(app, hotkey),
         Cmd::Unbind { app } => unbind(app),
@@ -48,6 +57,10 @@ fn main() -> Result<()> {
         Cmd::Disable => launchd::uninstall(),
         Cmd::Daemon => daemon::run(),
     }
+}
+
+fn print_usage_spec() {
+    clap_usage::generate(&mut Cli::command(), "hotkeys", &mut std::io::stdout());
 }
 
 fn bind(app_input: String, hotkey: String) -> Result<()> {
