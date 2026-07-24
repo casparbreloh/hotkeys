@@ -1,7 +1,9 @@
 use std::process::Command;
 
 use anyhow::{Result, bail};
-use objc2_app_kit::{NSWorkspace, NSWorkspaceOpenConfiguration};
+use objc2_app_kit::{
+    NSApplicationActivationOptions, NSRunningApplication, NSWorkspace, NSWorkspaceOpenConfiguration,
+};
 use objc2_foundation::NSString;
 
 pub fn resolve(input: &str) -> Result<String> {
@@ -33,9 +35,19 @@ fn bundle_exists(bundle_id: &str) -> bool {
 
 pub fn activate(bundle_id: &str) {
     unsafe {
+        let bundle_id = NSString::from_str(bundle_id);
+        let running = NSRunningApplication::runningApplicationsWithBundleIdentifier(&bundle_id);
+
+        if let Some(app) = running.firstObject()
+            && app.activateWithOptions(
+                NSApplicationActivationOptions::NSApplicationActivateAllWindows,
+            )
+        {
+            return;
+        }
+
         let ws = NSWorkspace::sharedWorkspace();
-        let Some(url) = ws.URLForApplicationWithBundleIdentifier(&NSString::from_str(bundle_id))
-        else {
+        let Some(url) = ws.URLForApplicationWithBundleIdentifier(&bundle_id) else {
             eprintln!("no app for {bundle_id}");
             return;
         };
