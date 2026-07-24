@@ -19,7 +19,7 @@ pub fn resolve(input: &str) -> Result<String> {
     Ok(id)
 }
 
-fn is_bundle_id(input: &str) -> bool {
+pub fn is_bundle_id(input: &str) -> bool {
     input.contains('.') && !input.contains(' ')
 }
 

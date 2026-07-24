@@ -77,7 +77,7 @@ pub fn install() -> Result<()> {
     if rc != 0 {
         bail!("launchctl bootstrap exited {rc}: {}", err.trim());
     }
-    println!("✓ enabled {}", paths::LABEL);
+    println!("enabled");
     Ok(())
 }
 
@@ -88,7 +88,7 @@ pub fn uninstall() -> Result<()> {
         Err(e) if e.kind() == ErrorKind::NotFound => {}
         Err(e) => return Err(e).context("removing LaunchAgent plist"),
     }
-    println!("✓ disabled {}", paths::LABEL);
+    println!("disabled");
     Ok(())
 }
 

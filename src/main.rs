@@ -5,7 +5,7 @@ mod hotkey;
 mod launchd;
 mod paths;
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use clap::{CommandFactory, Parser, Subcommand};
 
 #[derive(Parser)]
@@ -95,11 +95,13 @@ fn unbind(input: String) -> Result<()> {
         .cloned()
     {
         Some(b) => b,
+        None if app::is_bundle_id(&input) => input.clone(),
         None => app::resolve(&input)?,
     };
-    let hotkey = bindings
-        .remove(&bundle_id)
-        .ok_or_else(|| anyhow!("no binding for {input}"))?;
+    let Some(hotkey) = bindings.remove(&bundle_id) else {
+        status("unbound", &bundle_id);
+        return Ok(());
+    };
     config::save(&bindings)?;
     status("unbound", format_args!("{bundle_id} {hotkey}"));
     Ok(())
@@ -108,7 +110,7 @@ fn unbind(input: String) -> Result<()> {
 fn list() -> Result<()> {
     let bindings = config::load()?;
     if bindings.is_empty() {
-        println!("no bindings - `hotkeys bind <app> <hotkey>`");
+        println!("no bindings");
         return Ok(());
     }
     let width = bindings.keys().map(String::len).max().unwrap_or(0);
@@ -119,5 +121,5 @@ fn list() -> Result<()> {
 }
 
 fn status(verb: &str, object: impl std::fmt::Display) {
-    println!("✓ {verb} {object}");
+    println!("{verb} {object}");
 }

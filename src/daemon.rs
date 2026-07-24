@@ -88,7 +88,7 @@ fn rebind() {
         let bid = bundle_id.clone();
         let log = hotkey_str.clone();
         let r = hotkey::register(shortcut, move || {
-            eprintln!("fired {log} → {bid}");
+            eprintln!("fired {log} {bid}");
             app::activate(&bid);
         });
         if let Err(e) = r {
