@@ -110,7 +110,7 @@ fn unbind(input: String) -> Result<()> {
 fn list() -> Result<()> {
     let bindings = config::load()?;
     if bindings.is_empty() {
-        println!("no bindings");
+        println!("no bindings - `hotkeys bind <app> <hotkey>`");
         return Ok(());
     }
     let width = bindings.keys().map(String::len).max().unwrap_or(0);
