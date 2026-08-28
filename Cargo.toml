@@ -5,8 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1"
-clap = { version = "4", features = ["derive"] }
-clap_usage = "2"
+usage = { package = "usage-rs", version = "6" }
 libc = "0.2"
 notify = { version = "6", default-features = false, features = ["macos_kqueue"] }
 toml = "0.8"

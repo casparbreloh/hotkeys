@@ -6,18 +6,15 @@ mod launchd;
 mod paths;
 
 use anyhow::Result;
-use clap::{CommandFactory, Parser, Subcommand};
 
-#[derive(Parser)]
-#[command(arg_required_else_help = true)]
+#[derive(usage::Cli)]
+#[usage(bin = "hotkeys", unknown_flags = "error")]
 struct Cli {
-    #[arg(long, hide = true)]
-    usage_spec: bool,
-    #[command(subcommand)]
+    #[usage(subcommand)]
     cmd: Cmd,
 }
 
-#[derive(Subcommand)]
+#[derive(usage::Subcommands)]
 enum Cmd {
     /// Bind an app to a global hotkey
     Bind {
@@ -37,7 +34,7 @@ enum Cmd {
     Enable,
     /// Stop and uninstall the daemon
     Disable,
-    #[command(hide = true)]
+    #[usage(hide)]
     Daemon,
 }
 
@@ -45,7 +42,7 @@ fn main() -> Result<()> {
     if std::env::args_os().len() == 2
         && std::env::args_os().nth(1).as_deref() == Some("--usage-spec".as_ref())
     {
-        print_usage_spec();
+        print!("{}", Cli::to_kdl());
         return Ok(());
     }
 
@@ -57,10 +54,6 @@ fn main() -> Result<()> {
         Cmd::Disable => launchd::uninstall(),
         Cmd::Daemon => daemon::run(),
     }
-}
-
-fn print_usage_spec() {
-    clap_usage::generate(&mut Cli::command(), "hotkeys", &mut std::io::stdout());
 }
 
 fn bind(app_input: String, hotkey: String) -> Result<()> {
